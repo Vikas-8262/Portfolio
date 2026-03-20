@@ -491,10 +491,16 @@ footer{padding:14px clamp(20px,5vw,40px);border-top:1px solid rgba(255,255,255,.
       <div class="ct-big">Let's Build<br><em>Something.</em></div>
       <p class="ct-sub">Open to Python Developer, Backend Engineer, AI Automation, and Web Developer roles. Based in Pune, Maharashtra.</p>
       <div class="ct-links">
-        <div class="ct-link">✉ <a href="#" class="email-link"><span class="__cf_email__" data-cfemail="eb9d82808a98c5998a9f83848fc59f8e8883ab8c868a8287c5888486">[email&#160;protected]</span></a></div>
-        <div class="ct-link">📞 9699387499</div>
         <div class="ct-link">📍 Pune, Maharashtra, India</div>
         <div class="ct-link">🔗 <a href="https://www.linkedin.com/in/vikas-rathod-4511582a5" target="_blank">LinkedIn Profile ↗</a></div>
+      </div>
+      <div style="display:flex;gap:12px;margin-top:20px;flex-wrap:wrap;">
+        <a id="email-btn" href="#" style="display:inline-flex;align-items:center;gap:8px;padding:12px 22px;background:var(--el);color:#fff;text-decoration:none;font-family:'DM Mono',monospace;font-size:11px;letter-spacing:.06em;border-radius:2px;transition:all .2s;" onmouseover="this.style.background='#0062cc'" onmouseout="this.style.background='var(--el)'">
+          ✉ Send Email
+        </a>
+        <a href="https://wa.me/919699387499?text=Hi%20Vikas%2C%20I%20saw%20your%20portfolio%20and%20would%20like%20to%20connect!" target="_blank" style="display:inline-flex;align-items:center;gap:8px;padding:12px 22px;background:#25D366;color:#fff;text-decoration:none;font-family:'DM Mono',monospace;font-size:11px;letter-spacing:.06em;border-radius:2px;transition:all .2s;" onmouseover="this.style.background='#1da851'" onmouseout="this.style.background='#25D366'">
+          💬 WhatsApp
+        </a>
       </div>
     </div>
     <div>
@@ -884,7 +890,13 @@ function doSend(){
 
   var xhr = new XMLHttpRequest();
   xhr.open('POST', API_URL+'/api/contact', true);
+  xhr.timeout = 25000;
   xhr.setRequestHeader('Content-Type','application/json');
+  xhr.ontimeout = function(){
+    msg.className='f-msg err';
+    msg.textContent='Request timed out. Backend may be waking up. Please try again in 30 seconds.';
+    btn.disabled=false; btn.textContent='Try Again';
+  };
   xhr.onreadystatechange = function(){
     if(xhr.readyState !== 4) return;
     var ok = false;
@@ -902,11 +914,9 @@ function doSend(){
     btn.disabled=false; btn.textContent='Send Message';
   };
   xhr.onerror = function(){
-    // Backend may be sleeping (free tier) - retry once after 10s
     msg.className='f-msg err';
-    msg.textContent='Backend waking up... retrying in 10 seconds.';
-    setTimeout(function(){ doSend(); }, 10000);
-    btn.disabled=false; btn.textContent='Send Message';
+    msg.textContent='Backend is waking up (first request takes ~30 sec). Please try again in a moment.';
+    btn.disabled=false; btn.textContent='Try Again';
   };
   xhr.send(JSON.stringify({name:n, email:e, subject:s, message:m}));
 }
@@ -953,19 +963,23 @@ var _e = ['vikas','.','rathod','.','tech','@','gmail','.','com'].join('');
 
 // Populate all .em-addr spans with the email as a clickable link
 (function(){
-  var spans = document.querySelectorAll('.em-addr');
-  for(var i=0;i<spans.length;i++){
-    spans[i].innerHTML = '<a href="mailto:'+_e+'" style="color:var(--el);text-decoration:none;">'+_e+'</a>';
+  function applyEmail(){
+    var spans = document.querySelectorAll('.em-addr');
+    for(var i=0;i<spans.length;i++){
+      spans[i].innerHTML = '<a href="mailto:'+_e+'" style="color:var(--el);text-decoration:none;">'+_e+'</a>';
+    }
+    var links = document.querySelectorAll('.email-link');
+    for(var i=0;i<links.length;i++){
+      links[i].setAttribute('href','mailto:'+_e);
+      links[i].removeAttribute('class');
+    }
+    // Wire email button
+    var eb = document.getElementById('email-btn');
+    if(eb){ eb.setAttribute('href','mailto:'+_e); }
   }
-})();
-
-// Wire .email-link class hrefs (contact/footer/hero email buttons)
-(function(){
-  var links = document.querySelectorAll('.email-link');
-  for(var i=0;i<links.length;i++){
-    links[i].setAttribute('href','mailto:'+_e);
-    links[i].removeAttribute('class');
-  }
+  applyEmail();
+  // Run again after page load in case Cloudflare re-obfuscates
+  window.addEventListener('load', applyEmail);
 })();
 
 // pw enter key
